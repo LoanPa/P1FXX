@@ -53,10 +53,13 @@ int process_msg(int sock, swConnectionsMatrix swConnections)
   char buffer[MAX_BUFF_SIZE];
   int done = 0;
 
-  //TODO: recv(.....)
-
+  recv(sock,buffer, MAX_BUFF_SIZE, MSG_WAITALL);
   //TODO: obtenir el codi d'operació a partir del buffer:
-  //op_code = .....
+  op_code = buffer[0];
+  op_code <<= 8;
+  op_code |= buffer[1];
+
+  printf("op_code = %d", op_code);
   switch(op_code)
   {
     case MSG_HELLO:
@@ -98,12 +101,10 @@ int process_msg(int sock, swConnectionsMatrix swConnections)
 void process_HELLO_msg(int sock)
 {
   struct hello_rp_hdr hello_rp;
-
-  //TODO: omplir el opcode amb MSG_HELLO
-  //TODO: omplir el camp msg amb la cadena "Hello world":
-  //TODO: strcpy(....)
-  //TODO: send(.....)
-}
+  hello_rp.opcode = MSG_HELLO;
+  char msg[12] = "Hello world";
+  strcpy(hello_rp.msg, msg);
+  send(sock, hello_rp.msg, sizeof(hello_rp.msg), 0);
 
 /**
  * Function that sends the matrix whith the MAC addresses connected to each
@@ -112,6 +113,7 @@ void process_HELLO_msg(int sock)
  * @param swConnections the matrix with all the MAC addresses connected to each
  * port of the switch.
  */
+}
 void process_LIST_msg(int sock, swConnectionsMatrix swConnections)
 {
   struct list_rp_hdr list_rp;
@@ -147,7 +149,7 @@ void process_CONN_TO_msg(int sock, swConnectionsMatrix swConnections,
 
   //TODO: obtenir el port del missatge conn_to_msg:
   //port = ...(...);
-
+  port = 0; // TODO: borrar aquesta linia
   if((err_code=checkPortAndMACFormat(port, connect_to.mac)) == 0)
   {
     if (isPortAvailable(port, swConnections))
@@ -162,6 +164,7 @@ void process_CONN_TO_msg(int sock, swConnectionsMatrix swConnections,
       build_error_msg(reply, ERR_CODE_1);
     }
   }
+
   else
   {
     build_error_msg(reply, err_code);
@@ -250,6 +253,8 @@ void process_FREE_msg(int sock, swConnectionsMatrix swConnections,
   //TODO: obtenir el port del missatge free_msg:
   //port = ...(....);
 
+  port = 8080; // TODO: borrar aquesta linia
+
   if(isPortInRang(port) == FALSE)
   {
     build_error_msg(reply, ERR_CODE_4);
@@ -263,7 +268,7 @@ void process_FREE_msg(int sock, swConnectionsMatrix swConnections,
   {
     build_error_msg(reply, ERR_CODE_3);
   }
-
+  (void) free_msg;
   //TODO: send reply
 }
 
@@ -450,7 +455,7 @@ int main(int argc, char* argv[])
   struct sockaddr_in client_addr, server_addr;
   socklen_t client_addrlen = sizeof(client_addr);
   int port = getPort(argc, argv);
-  int done=0;
+  int done = 0;
 
   memset(swConnections, 0, MATRIX_SIZE);
 
@@ -472,10 +477,10 @@ int main(int argc, char* argv[])
   }
 
   while(1) {
-    //TODO: Aquí cal fer alguna cosa.
 
     con_sock = accept(s, (struct sockaddr*)& server_addr, &client_addrlen);
-
+    
+    process_HELLO_msg(con_sock);
 
     do {
       done = process_msg(con_sock, swConnections);
@@ -483,5 +488,8 @@ int main(int argc, char* argv[])
 
   }//end while
 
+
+
+  
   return 0;
 }

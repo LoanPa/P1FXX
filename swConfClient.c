@@ -76,12 +76,9 @@ void process_hello_operation(int sock)
 
   memset(&hello_rp, '\0', sizeof(hello_rp));
 
-  //TODO  send_parameterless_msg(....);
-  //TODO  recv(....);
-  //TODO printf("%s\n", ...);
-  send_parameterless_msg(sock, MSG_HELLO);
+  send_parameterless_msg(sock, hello_rp.opcode);
   recv(sock, &hello_rp.msg, sizeof(hello_rp.msg), MSG_WAITALL);
-
+  printf(hello_rp.msg);
 }
 
 /**
@@ -113,7 +110,7 @@ void process_connect_to_any_operation(int sock)
 {
   struct conn_any_hdr connect_to_any;
   struct conn_any_rp_hdr reply;
-
+  (void) reply;
   //TODO omplir el opcode MSG_CONN_ANY
   set_MAC_from_stdin(connect_to_any.mac);
 
@@ -144,7 +141,7 @@ void process_free_operation(int sock)
 {
   struct free_hdr free_msg;
   char reply[MAX_REPLY_SIZE];
-
+  (void) free_msg;
   //TODO omplir opcode
   //TODO omplir port ........=....(get_port_from_stdin());
 
@@ -211,7 +208,8 @@ void show_boolean_operation_feedback(char *reply)
 {
   int error_code;
   char err_msg[MAX_ERR_MSG_SIZE];
-
+  (void) err_msg;
+  (void) error_code;
   //TODO obtenir, a partir de reply, el codi d'operació.
   // tot omplint el puntejat i descomentant el codi.
   /*
@@ -285,7 +283,7 @@ unsigned short get_port_from_stdin()
 void do_list_operation(int sock)
 {
   struct list_rp_hdr list_rp;
-
+  (void) list_rp;
   //TODO send_parameterless_msg(..., MSG_LIST);
   //TODO recv(.........);
 
@@ -392,15 +390,15 @@ int main(int argc, char *argv[])
   server_addr.sin_port = htons(port);
   setaddrbyname(&server_addr, host);
 
-  connect(s, (struct sockaddr_in*)& server_addr, sizeof(server_addr));
-
+  connect(s, (struct sockaddr*)& server_addr, sizeof(server_addr));
+  process_hello_operation(s);
   do{
       do_list_operation(s);
       printa_menu();
 		  // getting the user input.
 		  scanf("%d",&option);
 		  printf("\n\n");
-		  process_menu_option(s, option)                  ;
+		  process_menu_option(s, option);
 
 	  }while(option != OP_FINISH); //end while(opcio)
 
